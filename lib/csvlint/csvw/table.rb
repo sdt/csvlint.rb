@@ -62,8 +62,9 @@ module Csvlint
         if validate
           unless @primary_key.nil?
             key = @primary_key.map { |column| column.validate(values[column.number - 1], row) }
-            colnum = if primary_key.length == 1 then primary_key[0].number else nil end
-            build_errors(:duplicate_key, :schema, row, colnum, key.join(","), @primary_key_values[key]) if @primary_key_values.include?(key)
+            colnums = primary_key.map { |x| x.number }
+            colnum = if colnums.length == 1 then colnums[0] else colnums end
+            build_errors(:duplicate_key, :schema, row, colnum, key, @primary_key_values[key]) if @primary_key_values.include?(key)
             @primary_key_values[key] = row
           end
           # build a record of the unique values that are referenced by foreign keys from other tables
@@ -108,7 +109,8 @@ module Csvlint
           "to" => { "url" => @url.to_s.split("/")[-1], "columns" => foreign_key["reference"]["columnReference"] }
         }
 
-        colnum = if foreign_key["referencing_columns"].length == 1 then foreign_key["referencing_columns"][0].number else nil end
+        colnums = foreign_key["referencing_columns"].map {|x| x.number}
+        colnum = if colnums.length == 1 then colnums[0] else colnums end
         remote.each do |key,rows|
           if not local[key]
             rows.each do |row|
